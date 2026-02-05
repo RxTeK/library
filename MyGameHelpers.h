@@ -16,9 +16,10 @@ namespace MaLib
 	{
 		UE_LOG(LogTemp, Warning, TEXT("%s"), *Text);
 	}
-    
+   
 	inline void PrintF(const FString& Format, float Value)
 	{
 		Print(FString::Printf(TEXT("%s: %.2f"), *Format, Value));
 	}
+bool caca = true;
 }
