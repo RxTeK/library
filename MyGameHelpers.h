@@ -1,6 +1,8 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "TimerManager.h"
 
 namespace MaLib
 {
@@ -58,5 +60,35 @@ namespace MaLib
 	inline void ResetAllDoOnce()
 	{
 		DoOnceStorage().Reset();
+	}
+
+	inline bool SetTimerByEvent(UObject* WorldContextObject, FTimerHandle& TimerHandle, TFunction<void()> Event, float Time, bool bLoop = false, float FirstDelay = -1.0f)
+	{
+		if (!WorldContextObject || !Event)
+		{
+			return false;
+		}
+
+		UWorld* World = WorldContextObject->GetWorld();
+		if (!World)
+		{
+			return false;
+		}
+
+		FTimerDelegate TimerDelegate;
+		TimerDelegate.BindLambda([Event = MoveTemp(Event)]() mutable
+		{
+			Event();
+		});
+
+		World->GetTimerManager().SetTimer(TimerHandle, MoveTemp(TimerDelegate), Time, bLoop, FirstDelay);
+		return true;
+	}
+
+	inline FTimerHandle SetTimerByEvent(UObject* WorldContextObject, TFunction<void()> Event, float Time, bool bLoop = false, float FirstDelay = -1.0f)
+	{
+		FTimerHandle TimerHandle;
+		SetTimerByEvent(WorldContextObject, TimerHandle, MoveTemp(Event), Time, bLoop, FirstDelay);
+		return TimerHandle;
 	}
 }
