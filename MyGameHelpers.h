@@ -91,4 +91,40 @@ namespace MaLib
 		SetTimerByEvent(WorldContextObject, TimerHandle, MoveTemp(Event), Time, bLoop, FirstDelay);
 		return TimerHandle;
 	}
+
+	inline bool Delay(UObject* WorldContextObject, FTimerHandle& TimerHandle, TFunction<void()> Event, float Duration)
+	{
+		if (!WorldContextObject || !Event)
+		{
+			return false;
+		}
+
+		UWorld* World = WorldContextObject->GetWorld();
+		if (!World)
+		{
+			return false;
+		}
+
+		const float SafeDuration = FMath::Max(0.0f, Duration);
+		if (SafeDuration <= 0.0f)
+		{
+			FTimerDelegate TimerDelegate;
+			TimerDelegate.BindLambda([Event = MoveTemp(Event)]() mutable
+			{
+				Event();
+			});
+
+			World->GetTimerManager().SetTimerForNextTick(MoveTemp(TimerDelegate));
+			return true;
+		}
+
+		return SetTimerByEvent(WorldContextObject, TimerHandle, MoveTemp(Event), SafeDuration, false);
+	}
+
+	inline FTimerHandle Delay(UObject* WorldContextObject, TFunction<void()> Event, float Duration)
+	{
+		FTimerHandle TimerHandle;
+		Delay(WorldContextObject, TimerHandle, MoveTemp(Event), Duration);
+		return TimerHandle;
+	}
 }
